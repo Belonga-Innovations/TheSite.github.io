@@ -60,10 +60,18 @@ if (!gl) {
   console.error("WebGL not supported");
 } else {
   let program;
-  let timeUniform, idleUniform;
+  let timeUniform, idleUniform, mouseUniform;
   let startTime = Date.now();
   let positionBuffer;
   let positionAttribLocation;
+  let mousePos = [0.5, 0.5]; // Default center
+
+  // Track normalized mouse position
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mousePos[0] = (e.clientX - rect.left) / rect.width;
+    mousePos[1] = 1.0 - (e.clientY - rect.top) / rect.height;
+  });
 
   // Resize canvas to fit window
   function resizeCanvas() {
@@ -101,6 +109,7 @@ if (!gl) {
     // === Uniform locations ===
     timeUniform = gl.getUniformLocation(program, 'u_time');
     idleUniform = gl.getUniformLocation(program, 'u_idle');
+    mouseUniform = gl.getUniformLocation(program, 'u_mouse');
 
     // Start render loop
     requestAnimationFrame(render);
@@ -118,6 +127,7 @@ if (!gl) {
     // Set uniforms
     gl.uniform1f(timeUniform, now);
     gl.uniform1i(idleUniform, idle ? 1 : 0);
+    gl.uniform2fv(mouseUniform, mousePos);
 
     // Draw fullscreen quad
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
