@@ -39,12 +39,12 @@ void main() {
 
   float n = fbm(uv);
 
-  // Bright green neon effect (corrected intensity)
-  float intensity = smoothstep(0.4, 0.6, n);
-  vec3 neonGreen = vec3(0.0, 1.0, 0.0) * intensity * 0.03;
+  // Much tighter threshold for subtle highlights
+  float intensity = smoothstep(0.48, 0.52, n);
 
-  // Subtle glow aura
-  neonGreen += vec3(0.0, 0.3, 0.0) * pow(intensity, 2.0);
+  // Very subtle green glow
+  vec3 neonGreen = vec3(0.0, 1.0, 0.0) * intensity * 0.05;
+  neonGreen += vec3(0.0, 0.3, 0.0) * pow(intensity, 2.0) * 0.02;
 
   // Final color with clamping
   gl_FragColor = vec4(clamp(neonGreen, 0.0, 1.0), 1.0);
