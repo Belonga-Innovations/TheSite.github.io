@@ -1,0 +1,110 @@
+:root {
+  --background-light: #ffffff;
+  --background-dark: #000000;
+  --text-light: #111111;
+  --text-dark: #f0f0f0;
+  --accent: #39FF14;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: var(--background-light);
+  color: var(--text-light);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark {
+  background-color: var(--background-dark);
+  color: var(--text-dark);
+}
+
+header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--accent);
+}
+
+.site-title {
+  font-size: 2rem;
+  color: var(--accent);
+}
+
+#theme-toggle {
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.hero {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.hero h2 {
+  font-size: 2.5rem;
+  color: var(--accent);
+}
+
+.about {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 2rem;
+  border-top: 1px solid var(--accent);
+}
+
+.about-photo {
+  max-width: 300px;
+  width: 100%;
+  border: 2px solid var(--accent);
+  margin-right: 2rem;
+}
+
+.about-text h3 {
+  font-size: 2rem;
+  margin: 0.5rem 0;
+  color: var(--accent);
+}
+
+.about-text h4 {
+  font-weight: normal;
+  margin: 0.25rem 0 1rem 0;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  border-top: 2px solid var(--accent);
+}
+
+body.dark header,
+body.dark footer {
+  border-color: var(--accent);
+}
+
+body.dark .site-title,
+body.dark .hero h2,
+body.dark .about-text h3,
+body.dark #theme-toggle {
+  color: var(--accent);
+}
+
+#theme-toggle:hover {
+  background-color: var(--accent);
+  color: var(--background-dark);
+}
+
+@media (max-width: 768px) {
+  .about {
+    flex-direction: column;
+  }
+  .about-photo {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+}
