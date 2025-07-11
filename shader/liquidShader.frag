@@ -18,8 +18,8 @@ float noise(vec2 st) {
   float b = random(i + vec2(1.0, 0.0));
   float c = random(i + vec2(0.0, 1.0));
   float d = random(i + vec2(1.0, 1.0));
-  vec2 u = f * f * (3.0 - 2.0 * f);
-  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+  vec2 u = f*f*(3.0-2.0*f);
+  return mix(a, b, u.x) + (c - a)*u.y*(1.0 - u.x) + (d - b)*u.x*u.y;
 }
 
 float fbm(vec2 st) {
@@ -35,21 +35,24 @@ float fbm(vec2 st) {
 
 void main() {
   vec2 uv = v_uv * 4.0;
-  float speed = (u_idle == 1) ? 0.01 : 0.08;
-  uv += vec2(u_time * speed, u_time * speed * 0.4);
-  
-  float n = fbm(uv);
+
+  // Base FBM noise for texture
+  float n = fbm(uv + u_time * 0.05);
+
+  // Threshold the noise for pattern
   float intensity = smoothstep(0.48, 0.52, n);
 
-  // Compute distance from cursor
+  // Distance from cursor controls local glow
   float dist = distance(v_uv, u_mouse);
-  float cursorMask = smoothstep(0.4, 0.0, dist);
+  float cursorEffect = smoothstep(0.4, 0.0, dist);
 
-  // Combine with idle fading
-  float fade = (u_idle == 1) ? 0.02 : 0.2;
-  fade *= cursorMask;
+  // Idle fades out everything
+  float idleFade = (u_idle == 1) ? 0.0 : 1.0;
 
-  // Color layers
+  // Final fade: cursor local + idle
+  float finalFade = cursorEffect * idleFade;
+
+  // Subtle layered color
   vec3 layer1 = vec3(0.0, 0.4, 0.2);
   vec3 layer2 = vec3(0.0, 0.2, 0.4);
   vec3 layer3 = vec3(0.05, 0.1, 0.3);
@@ -57,8 +60,9 @@ void main() {
   vec3 color = mix(layer1, layer2, n);
   color = mix(color, layer3, n * 0.5);
 
+  // Base dark tint so black areas aren't pure black
   vec3 base = vec3(0.02, 0.03, 0.04);
-  vec3 finalColor = mix(base, color, intensity * fade);
+  vec3 finalColor = mix(base, color, intensity * finalFade);
 
   gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
 }
