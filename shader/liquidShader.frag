@@ -4,14 +4,13 @@ precision mediump float;
 
 uniform float u_time;
 uniform int u_idle;
+uniform vec2 u_mouse;
 varying vec2 v_uv;
 
-// Random hash
 float random(vec2 st) {
   return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
 }
 
-// Value noise
 float noise(vec2 st) {
   vec2 i = floor(st);
   vec2 f = fract(st);
@@ -23,7 +22,6 @@ float noise(vec2 st) {
   return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
 }
 
-// Fractal Brownian Motion
 float fbm(vec2 st) {
   float value = 0.0;
   float amplitude = 0.5;
@@ -37,30 +35,30 @@ float fbm(vec2 st) {
 
 void main() {
   vec2 uv = v_uv * 4.0;
-
-  // Speed varies with idle
   float speed = (u_idle == 1) ? 0.01 : 0.08;
   uv += vec2(u_time * speed, u_time * speed * 0.4);
-
-  // Base FBM noise
+  
   float n = fbm(uv);
+  float intensity = smoothstep(0.48, 0.52, n);
 
-  // Sharper threshold for "surfacing" logic
-  float intensity = smoothstep(0.49, 0.51, n);
+  // Compute distance from cursor
+  float dist = distance(v_uv, u_mouse);
+  float cursorMask = smoothstep(0.4, 0.0, dist);
 
-  // Layered color bands - feels like code/logic surfacing
-  vec3 layer1 = vec3(0.0, 0.4, 0.2);  // muted green
-  vec3 layer2 = vec3(0.0, 0.2, 0.4);  // dark cyan
-  vec3 layer3 = vec3(0.05, 0.1, 0.3); // slate blue
+  // Combine with idle fading
+  float fade = (u_idle == 1) ? 0.02 : 0.2;
+  fade *= cursorMask;
 
-  // Blend based on noise
+  // Color layers
+  vec3 layer1 = vec3(0.0, 0.4, 0.2);
+  vec3 layer2 = vec3(0.0, 0.2, 0.4);
+  vec3 layer3 = vec3(0.05, 0.1, 0.3);
+
   vec3 color = mix(layer1, layer2, n);
   color = mix(color, layer3, n * 0.5);
 
-  // Idle state fades it almost to black
-  float fade = (u_idle == 1) ? 0.02 : 0.2;
-  vec3 finalColor = color * intensity * fade;
+  vec3 base = vec3(0.02, 0.03, 0.04);
+  vec3 finalColor = mix(base, color, intensity * fade);
 
-  // Clamp and output
   gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
 }
