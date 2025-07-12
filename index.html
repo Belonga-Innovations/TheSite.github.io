@@ -7,19 +7,205 @@
   <style>
     html, body {
       margin: 0;
-      overflow: hidden;
+      padding: 0;
       background: black;
+      overflow: hidden;
+      font-family: 'Montserrat', sans-serif;
+      color: #e0f0f0;
     }
+
     canvas {
-      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
+      z-index: 0;
       background: black;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1rem 2rem;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: #39FF14;
+      text-shadow:
+        0 0 6px rgba(57, 255, 20, 0.6),
+        0 0 12px rgba(57, 255, 20, 0.3),
+        0 0 24px rgba(57, 255, 20, 0.15);
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      padding-top: 6rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    section {
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 1rem;
+      color: #e0f0f0;
+    }
+
+    section h2 {
+      margin-top: 0;
+      font-size: 1.8rem;
+      border-bottom: 1px solid rgba(57, 255, 20, 0.3);
+      padding-bottom: 0.5rem;
+    }
+
+    #hero p {
+      font-size: 1.25rem;
+      line-height: 1.5;
+      color: #cceeee;
+      text-shadow: 0 0 4px rgba(0, 255, 255, 0.2);
+    }
+
+    #about .team {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    #about .member {
+      flex: 1 1 45%;
+      background: rgba(0,0,0,0.4);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    #about .member h3 {
+      margin: 0.5rem 0;
+      color: #39FF14;
+      text-shadow:
+        0 0 4px rgba(57, 255, 20, 0.5),
+        0 0 8px rgba(57, 255, 20, 0.2);
+    }
+
+    #contact form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    #contact input, #contact textarea {
+      background: rgba(0,0,0,0.6);
+      border: 1px solid #39FF14;
+      color: #e0f0f0;
+      padding: 0.75rem;
+      border-radius: 6px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    #contact button {
+      background: #39FF14;
+      color: black;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #contact button:hover {
+      background: #2ECC71;
+    }
+
+    #form-message {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #cceeee;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
+      backdrop-filter: blur(3px);
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+      section h2 {
+        font-size: 1.5rem;
+      }
+      #hero p {
+        font-size: 1rem;
+      }
     }
   </style>
 </head>
 <body>
   <canvas id="background-canvas"></canvas>
+
+  <header>
+    <h1>Belonga Innovations</h1>
+  </header>
+
+  <main>
+    <section id="hero">
+      <p>No Compromise. Just Design Done Right.<br>We don’t build for today. We build what’s next.</p>
+    </section>
+
+    <section id="about">
+      <h2>About</h2>
+      <p>
+        Belonga Innovations is a human–AI design studio dedicated to redefining the future.
+        We merge advanced artificial intelligence with uncompromising human vision to craft systems that stand apart.
+      </p>
+      <div class="team">
+        <div class="member">
+          <h3>Ryan Belonga</h3>
+          <p>Founder, AI Systems Engineer, Lead Product Architect</p>
+        </div>
+        <div class="member">
+          <h3>Maestro</h3>
+          <p>AI Systems Designer, Research Partner</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>Join us in building what comes next.</p>
+      <form id="contact-form">
+        <input type="email" name="email" placeholder="Your email" required>
+        <textarea name="message" placeholder="Your message"></textarea>
+        <button type="submit">Send</button>
+      </form>
+      <div id="form-message"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Belonga Innovations. All rights reserved.</p>
+  </footer>
+
   <script src="script.js"></script>
 </body>
 </html>
