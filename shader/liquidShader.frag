@@ -40,17 +40,29 @@ void main() {
   vec2 uv = v_uv;
   vec2 mouseWarp = uv - u_mouse;
   float dist = length(mouseWarp);
-  float attract = smoothstep(0.3, 0.0, dist) * u_velocity;
 
-  vec2 warpUV = uv + attract * normalize(mouseWarp) * 0.05;
+  // STRONGER attractor field
+  float attract = smoothstep(0.4, 0.0, dist) * (u_velocity + 0.3);
 
-  float baseNoise = fbm(warpUV * 4.0 + u_time * 0.02);
+  // Warp UV more noticeably
+  vec2 warpUV = uv + attract * normalize(mouseWarp) * 0.08;
+
+  // Higher frequency noise + time warp
+  float baseNoise = fbm(warpUV * 6.0 + u_time * 0.04);
+
+  // Blend in previous frame (memory)
   vec4 prev = texture2D(u_feedback, uv);
-  float fade = u_idle == 1 ? 0.96 : 0.9;
-  vec3 color = mix(prev.rgb * fade, vec3(0.0, 0.4, 0.2) * baseNoise, 0.4);
+  float fade = u_idle == 1 ? 0.95 : 0.88;
 
-  color += vec3(0.0, 0.2, 0.4) * baseNoise * 0.2;
-  color += vec3(0.05, 0.1, 0.3) * baseNoise * 0.1;
+  // Boost contrast
+  baseNoise = pow(baseNoise, 1.3);
 
-  gl_FragColor = vec4(clamp(color,0.0,1.0),1.0);
+  // Richer color layering
+  vec3 layer1 = vec3(0.0, 0.5, 0.3) * baseNoise;
+  vec3 layer2 = vec3(0.0, 0.3, 0.5) * pow(baseNoise, 1.5);
+  vec3 layer3 = vec3(0.05, 0.15, 0.35) * pow(baseNoise, 2.0);
+
+  vec3 color = mix(prev.rgb * fade, layer1 + layer2 + layer3, 0.55);
+
+  gl_FragColor = vec4(clamp(color,0.0,1.0), 1.0);
 }
