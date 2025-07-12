@@ -5,16 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Belonga Innovations</title>
   <style>
-    html {
-      scroll-behavior: smooth;
-    }
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
-      background: black;
-      overflow-x: hidden;
-      font-family: 'Montserrat', sans-serif;
-      color: #e0f0f0;
+      background-color: black;
+      color: #e0e0e0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
     }
 
     canvas {
@@ -23,177 +20,60 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      z-index: 0;
-      background: black;
+      display: block;
+      z-index: -1;
     }
 
     header {
-      position: fixed;
-      top: 0;
+      position: absolute;
+      top: 2rem;
       width: 100%;
-      padding: 1rem 2rem;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      display: flex;
-      justify-content: center;
-      z-index: 2;
+      text-align: center;
+      pointer-events: none;
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 2rem;
-      color: #ffffff;
-      text-shadow:
-        0 2px 6px rgba(57, 255, 20, 0.5),
-        0 0 2px rgba(57, 255, 20, 0.3);
-      letter-spacing: 1px;
-      font-weight: 700;
+    h1 {
+      font-family: monospace;
+      font-size: clamp(2rem, 5vw, 4rem);
+      color: white;
+      position: relative;
+      display: inline-block;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -0.2rem;
+      left: 0;
+      width: 100%;
+      height: 0.2rem;
+      background: radial-gradient(closest-side, #00ff00 50%, transparent 100%);
+      opacity: 0.6;
+      filter: blur(4px);
+      transition: opacity 0.3s;
     }
 
     main {
-      position: relative;
-      z-index: 1;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    #hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       text-align: center;
-      padding: 2rem 1rem;
+      max-width: 90vw;
+      pointer-events: none;
     }
 
-    #hero p {
-      font-size: 1.25rem;
-      line-height: 1.5;
-      color: #cceeee;
-      text-shadow: 0 0 4px rgba(0, 255, 255, 0.2);
-    }
-
-    #about, #contact {
-      padding: 4rem 1rem;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(6px);
-      border-radius: 12px;
-      margin: 2rem 1rem;
-    }
-
-    section h2 {
-      margin-top: 0;
-      font-size: 1.8rem;
-      border-bottom: 1px solid rgba(57, 255, 20, 0.3);
-      padding-bottom: 0.5rem;
-      text-align: center;
-    }
-
-    #about p, #contact p {
-      text-align: center;
-      max-width: 700px;
-      margin: 1rem auto;
-    }
-
-    #about .team {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 2rem;
-      justify-content: center;
-    }
-
-    #about .member {
-      flex: 1 1 250px;
-      max-width: 300px;
-      background: rgba(0,0,0,0.4);
-      padding: 1rem;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    #about .member img {
-      width: 150px;
-      max-width: 80%;
-      border-radius: 8px;
-      border: 2px solid #39FF14;
-      box-shadow:
-        0 0 8px rgba(57, 255, 20, 0.4),
-        0 0 16px rgba(57, 255, 20, 0.2);
-      margin-bottom: 1rem;
-      transition: transform 0.3s ease;
-    }
-
-    #about .member img:hover {
-      transform: scale(1.03);
-    }
-
-    #about .member h3 {
+    h2 {
+      font-size: clamp(3rem, 5vw, 5rem);
+      color: #e0e0e0;
       margin: 0.5rem 0;
-      color: #ffffff;
-      text-shadow:
-        0 2px 6px rgba(57, 255, 20, 0.5),
-        0 0 2px rgba(57, 255, 20, 0.3);
     }
 
-    #contact form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      max-width: 500px;
-      margin: 2rem auto 0;
-    }
-
-    #contact input, #contact textarea {
-      background: rgba(0,0,0,0.6);
-      border: 1px solid #39FF14;
-      color: #e0f0f0;
-      padding: 0.75rem;
-      border-radius: 6px;
-      resize: vertical;
-      font-family: inherit;
-    }
-
-    #contact button {
-      background: #39FF14;
-      color: black;
-      border: none;
-      padding: 0.75rem;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    #contact button:hover {
-      background: #2ECC71;
-    }
-
-    #form-message {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: #cceeee;
-      text-align: center;
-    }
-
-    footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.4);
-      backdrop-filter: blur(3px);
-    }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 1.5rem;
-      }
-      section h2 {
-        font-size: 1.5rem;
-      }
-      #hero p {
-        font-size: 1rem;
-      }
+    p {
+      font-size: clamp(1rem, 2vw, 2rem);
+      color: #b0b0b0;
+      max-width: 800px;
+      margin: 0 auto;
     }
   </style>
 </head>
@@ -205,45 +85,156 @@
   </header>
 
   <main>
-    <section id="hero">
-      <p>No Compromise. Just Design Done Right.<br>We don’t build for today. We build what’s next.</p>
-    </section>
-
-    <section id="about">
-      <h2>About</h2>
-      <p>
-        Belonga Innovations is a human–AI design studio dedicated to redefining the future.
-        We merge advanced artificial intelligence with uncompromising human vision to craft systems that stand apart.
-      </p>
-      <div class="team">
-        <div class="member">
-          <img src="assets/Ryan_propic_600dpi.png" alt="Ryan Belonga">
-          <h3>Ryan Belonga</h3>
-          <p>Founder, AI Systems Engineer, Lead Product Architect</p>
-        </div>
-        <div class="member">
-          <h3>Maestro</h3>
-          <p>AI Systems Designer, Research Partner</p>
-        </div>
-      </div>
-    </section>
-
-    <section id="contact">
-      <h2>Contact</h2>
-      <p>Join us in building what comes next.</p>
-      <form id="contact-form">
-        <input type="email" name="email" placeholder="Your email" required>
-        <textarea name="message" placeholder="Your message"></textarea>
-        <button type="submit">Send</button>
-      </form>
-      <div id="form-message"></div>
-    </section>
+    <h2>No Compromise. Just design done right.</h2>
+    <p>We don't build for today. We build what's next.</p>
   </main>
 
-  <footer>
-    <p>© 2025 Belonga Innovations. All rights reserved.</p>
-  </footer>
+  <script id="vertex-shader" type="x-shader/x-vertex">
+    attribute vec2 a_position;
+    varying vec2 v_uv;
 
-  <script src="script.js"></script>
+    void main() {
+      v_uv = a_position * 0.5 + 0.5;
+      gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+  </script>
+
+  <script id="fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform float u_time;
+    uniform int u_idle;
+    uniform vec2 u_mouse;
+    varying vec2 v_uv;
+
+    float distanceField(vec2 uv, vec2 point) {
+      return length(uv - point);
+    }
+
+    void main() {
+      vec2 uv = v_uv;
+
+      // Base subtle noise background
+      float noise = fract(sin(dot(uv, vec2(12.9898,78.233))) * 43758.5453) * 0.05;
+
+      // Calculate distance from cursor
+      float dist = distanceField(uv, u_mouse);
+
+      // Create tight, sharp falloff around cursor with ~3 inch fade
+      float radius = 0.02;
+      float softness = 0.03;
+      float glow = exp(-pow(dist / radius, 3.0)) * 1.5;
+
+      // Add subtle green highlight
+      vec3 color = vec3(noise);
+      color += vec3(0.0, 1.0, 0.0) * glow * 0.5;
+      color += vec3(0.8) * glow * 0.1;
+
+      // Idle fade
+      if(u_idle == 1) {
+        color *= 0.2;
+      }
+
+      gl_FragColor = vec4(color, 1.0);
+    }
+  </script>
+
+  <script>
+    const canvas = document.getElementById('background-canvas');
+    const gl = canvas.getContext('webgl');
+
+    let idle = false;
+    let idleTimer;
+    let mousePos = [0.5, 0.5];
+
+    function resetIdleTimer() {
+      idle = false;
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => { idle = true; }, 3000);
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      mousePos = [e.clientX / window.innerWidth, 1.0 - e.clientY / window.innerHeight];
+      resetIdleTimer();
+    });
+    window.addEventListener('keydown', resetIdleTimer);
+    resetIdleTimer();
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function createShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    }
+
+    function createProgram(vsSource, fsSource) {
+      const vShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+      const fShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+      const program = gl.createProgram();
+      gl.attachShader(program, vShader);
+      gl.attachShader(program, fShader);
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error(gl.getProgramInfoLog(program));
+        return null;
+      }
+      return program;
+    }
+
+    const vsSource = document.getElementById('vertex-shader').text;
+    const fsSource = document.getElementById('fragment-shader').text;
+    const program = createProgram(vsSource, fsSource);
+    gl.useProgram(program);
+
+    const posBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1, 1, -1, -1, 1,
+      -1, 1, 1, -1, 1, 1
+    ]), gl.STATIC_DRAW);
+
+    const aPos = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(aPos);
+    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+    const uTime = gl.getUniformLocation(program, 'u_time');
+    const uIdle = gl.getUniformLocation(program, 'u_idle');
+    const uMouse = gl.getUniformLocation(program, 'u_mouse');
+
+    let startTime = Date.now();
+
+    function render() {
+      const now = (Date.now() - startTime) / 1000;
+
+      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(program);
+
+      gl.uniform1f(uTime, now);
+      gl.uniform1i(uIdle, idle ? 1 : 0);
+      gl.uniform2f(uMouse, mousePos[0], mousePos[1]);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  </script>
 </body>
 </html>
