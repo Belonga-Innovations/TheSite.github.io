@@ -2,7 +2,9 @@ const canvas = document.getElementById('background-canvas');
 const gl = canvas.getContext('webgl2');
 if (!gl) throw new Error('WebGL2 not supported');
 
-let program, buffer1, buffer2, fb1, fb2;
+let programMain, programTrail;
+let fbTrailA, fbTrailB, texTrailA, texTrailB;
+let fbMain, texMain;
 let mouse = [0.5, 0.5];
 let lastMouse = [0.5, 0.5];
 let velocity = 0.0;
@@ -15,7 +17,10 @@ function resize() {
   canvas.height = window.innerHeight;
   gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 }
-window.addEventListener('resize', resize);
+window.addEventListener('resize', () => {
+  resize();
+  initFramebuffers();
+});
 resize();
 
 function resetIdleTimer() {
@@ -39,29 +44,42 @@ async function loadShader(url) {
 }
 
 async function main() {
-  const [vsSource, fsSource] = await Promise.all([
+  const [vsSrc, fsMainSrc, fsTrailSrc] = await Promise.all([
     loadShader('shader/liquidShader.vert'),
-    loadShader('shader/liquidShader.frag')
+    loadShader('shader/liquidShader.frag'),
+    loadShader('shader/trailShader.frag')
   ]);
-  program = initProgram(vsSource, fsSource);
 
-  buffer1 = gl.createTexture();
-  buffer2 = gl.createTexture();
-  fb1 = gl.createFramebuffer();
-  fb2 = gl.createFramebuffer();
-  initBuffer(buffer1, fb1);
-  initBuffer(buffer2, fb2);
+  programMain = initProgram(vsSrc, fsMainSrc);
+  programTrail = initProgram(vsSrc, fsTrailSrc);
 
+  initFramebuffers();
   requestAnimationFrame(render);
 }
 main();
 
-function initBuffer(tex, fb) {
+function initFramebuffers() {
+  texTrailA = createTexture();
+  texTrailB = createTexture();
+  fbTrailA = createFramebuffer(texTrailA);
+  fbTrailB = createFramebuffer(texTrailB);
+  texMain = createTexture();
+  fbMain = createFramebuffer(texMain);
+}
+
+function createTexture() {
+  const tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  return tex;
+}
+
+function createFramebuffer(tex) {
+  const fb = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return fb;
 }
 
 function initProgram(vsSource, fsSource) {
@@ -92,10 +110,64 @@ function compile(type, source) {
 function render() {
   const now = (Date.now() - startTime) / 1000;
 
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fb1);
+  // PASS 1: Update Trail Buffer
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbTrailA);
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.useProgram(program);
+  gl.useProgram(programTrail);
+  setupQuad(programTrail);
 
+  setUniforms(programTrail, {
+    u_time: now,
+    u_mouse: mouse,
+    u_velocity: velocity,
+    u_idle: idle ? 1 : 0,
+    u_resolution: [canvas.width, canvas.height],
+    u_trail: texTrailB
+  });
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  // PASS 2: Main Composition
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbMain);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.useProgram(programMain);
+  setupQuad(programMain);
+
+  setUniforms(programMain, {
+    u_time: now,
+    u_mouse: mouse,
+    u_velocity: velocity,
+    u_idle: idle ? 1 : 0,
+    u_resolution: [canvas.width, canvas.height],
+    u_feedback: texMain,
+    u_trail: texTrailA
+  });
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  // Draw to screen
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.useProgram(programMain);
+  setupQuad(programMain);
+  setUniforms(programMain, {
+    u_time: now,
+    u_mouse: mouse,
+    u_velocity: velocity,
+    u_idle: idle ? 1 : 0,
+    u_resolution: [canvas.width, canvas.height],
+    u_feedback: texMain,
+    u_trail: texTrailA
+  });
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  // Swap trail buffers
+  [fbTrailA, fbTrailB] = [fbTrailB, fbTrailA];
+  [texTrailA, texTrailB] = [texTrailB, texTrailA];
+
+  velocity *= 0.95;
+  requestAnimationFrame(render);
+}
+
+function setupQuad(program) {
   const posBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -106,28 +178,19 @@ function render() {
   const posLoc = gl.getAttribLocation(program, 'a_position');
   gl.enableVertexAttribArray(posLoc);
   gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+}
 
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, buffer2);
-  gl.uniform1i(gl.getUniformLocation(program, 'u_feedback'), 0);
-  gl.uniform1f(gl.getUniformLocation(program, 'u_time'), now);
-  gl.uniform2fv(gl.getUniformLocation(program, 'u_mouse'), mouse);
-  gl.uniform1f(gl.getUniformLocation(program, 'u_velocity'), velocity);
-  gl.uniform1i(gl.getUniformLocation(program, 'u_idle'), idle ? 1 : 0);
-  gl.uniform2f(gl.getUniformLocation(program, 'u_resolution'), canvas.width, canvas.height);
-
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-  // Swap buffers
-  [buffer1, buffer2] = [buffer2, buffer1];
-  [fb1, fb2] = [fb2, fb1];
-
-  // Render to screen
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.bindTexture(gl.TEXTURE_2D, buffer2);
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-  velocity *= 0.95;
-  requestAnimationFrame(render);
+function setUniforms(program, uniforms) {
+  for (const [name, value] of Object.entries(uniforms)) {
+    const loc = gl.getUniformLocation(program, name);
+    if (typeof value === 'number') gl.uniform1f(loc, value);
+    else if (Array.isArray(value) && value.length === 2) gl.uniform2f(loc, value[0], value[1]);
+    else if (typeof value === 'boolean' || Number.isInteger(value)) gl.uniform1i(loc, value);
+    else if (value instanceof WebGLTexture) {
+      const unit = 0;
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, value);
+      gl.uniform1i(loc, unit);
+    }
+  }
 }
