@@ -3,71 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Belonga Innovations - TheSite</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Belonga Innovations</title>
+  <style>
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+    }
+  </style>
 </head>
 <body>
   <canvas id="background-canvas"></canvas>
-
-  <header>
-    <div class="container">
-      <h1 class="brand">Belonga Innovations</h1>
-      <button id="theme-toggle" aria-label="Toggle Light/Dark Theme">🌓</button>
-    </div>
-  </header>
-
-  <main>
-    <section class="hero">
-      <div class="hero-text">
-        <h2>No Compromise. Just Design Done Right.</h2>
-        <p>We don't build for today. We build what's next.</p>
-      </div>
-    </section>
-
-    <section class="about" id="about">
-      <div class="container about-container">
-        <img src="assets/Ryan_propic_600dpi.png" alt="Ryan Belonga, Founder" class="about-photo" loading="lazy" />
-        <div class="about-text">
-          <h3>Ryan Belonga</h3>
-          <h4>Founder, AI Systems Engineer & Lead Product Architect</h4>
-          <p>At Belonga Innovations, we don’t build for today. We build systems that anticipate tomorrow. No compromise. Just design done right.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="why">
-      <div class="container">
-        <h2>Why We're Different</h2>
-        <div class="why-cards">
-          <div class="card">Modular design systems.</div>
-          <div class="card">AI-native thinking, no hype.</div>
-          <div class="card">Immersive interfaces, not gimmicks.</div>
-          <div class="card">Built bottom-up, no lock-in.</div>
-          <div class="card">Real-time data. Real-world behavior.</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="contact">
-      <div class="container">
-        <h2>Join Us at the Starting Line</h2>
-        <p>Get on the early list. Be first to know.</p>
-        <form id="contact-form">
-          <input type="text" name="name" placeholder="Your Name (optional)" />
-          <input type="email" name="email" placeholder="Your Email" required />
-          <button type="submit">Subscribe</button>
-          <p id="form-message"></p>
-        </form>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="container">
-      <p>&copy; 2025 Belonga Innovations. All rights reserved.</p>
-    </div>
-  </footer>
-
   <script src="script.js"></script>
 </body>
 </html>
