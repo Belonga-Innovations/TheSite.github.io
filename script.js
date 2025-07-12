@@ -1,185 +1,133 @@
-// ========================================
-// THEME TOGGLE
-// ========================================
-const toggleBtn = document.getElementById('theme-toggle');
-toggleBtn?.addEventListener('click', () => {
-  document.body.classList.toggle('light');
-  localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-});
+const canvas = document.getElementById('background-canvas');
+const gl = canvas.getContext('webgl2');
+if (!gl) throw new Error('WebGL2 not supported');
 
-if (localStorage.getItem('theme') === 'light') {
-  document.body.classList.add('light');
-}
-
-// ========================================
-// CONTACT FORM HANDLING
-// ========================================
-const form = document.getElementById('contact-form');
-const formMsg = document.getElementById('form-message');
-
-form?.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = form.email.value.trim();
-
-  if (!validateEmail(email)) {
-    formMsg.textContent = "Please enter a valid email address.";
-    return;
-  }
-
-  formMsg.textContent = "Thank you! You’re on the list.";
-  form.reset();
-});
-
-function validateEmail(email) {
-  return /\S+@\S+\.\S+/.test(email);
-}
-
-// ========================================
-// IDLE DETECTION FOR SHADER
-// ========================================
+let program, buffer1, buffer2, fb1, fb2;
+let mouse = [0.5, 0.5];
+let lastMouse = [0.5, 0.5];
+let velocity = 0.0;
 let idle = false;
 let idleTimer;
+let startTime = Date.now();
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+}
+window.addEventListener('resize', resize);
+resize();
 
 function resetIdleTimer() {
   idle = false;
   clearTimeout(idleTimer);
-  idleTimer = setTimeout(() => { idle = true; }, 5000);
+  idleTimer = setTimeout(() => idle = true, 5000);
 }
-
-window.addEventListener('mousemove', resetIdleTimer);
-window.addEventListener('keydown', resetIdleTimer);
+window.addEventListener('mousemove', e => {
+  resetIdleTimer();
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = 1 - (e.clientY - rect.top) / rect.height;
+  velocity = Math.min(1.0, Math.hypot(x - lastMouse[0], y - lastMouse[1]) * 20);
+  lastMouse = [x, y];
+  mouse = [x, y];
+});
 resetIdleTimer();
 
-// ========================================
-// SHADER CANVAS SETUP
-// ========================================
-const canvas = document.getElementById('background-canvas');
-const gl = canvas?.getContext('webgl');
+async function loadShader(url) {
+  return await fetch(url).then(res => res.text());
+}
 
-if (!gl) {
-  console.error("WebGL not supported");
-} else {
-  let program;
-  let timeUniform, idleUniform, mouseUniform;
-  let startTime = Date.now();
-  let positionBuffer;
-  let positionAttribLocation;
-  let mousePos = [0.5, 0.5]; // Default center
+async function main() {
+  const [vsSource, fsSource] = await Promise.all([
+    loadShader('shader/liquidShader.vert'),
+    loadShader('shader/liquidShader.frag')
+  ]);
+  program = initProgram(vsSource, fsSource);
 
-  // Track normalized mouse position
-  canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    mousePos[0] = (e.clientX - rect.left) / rect.width;
-    mousePos[1] = 1.0 - (e.clientY - rect.top) / rect.height;
-  });
+  buffer1 = gl.createTexture();
+  buffer2 = gl.createTexture();
+  fb1 = gl.createFramebuffer();
+  fb2 = gl.createFramebuffer();
+  initBuffer(buffer1, fb1);
+  initBuffer(buffer2, fb2);
 
-  // Resize canvas to fit window
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+  requestAnimationFrame(render);
+}
+main();
+
+function initBuffer(tex, fb) {
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+}
+
+function initProgram(vsSource, fsSource) {
+  const vs = compile(gl.VERTEX_SHADER, vsSource);
+  const fs = compile(gl.FRAGMENT_SHADER, fsSource);
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs);
+  gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(prog));
+    throw new Error('Shader program link failed');
   }
+  return prog;
+}
 
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
-
-  // Fetch shader source
-  fetchShaderFiles().then(([vertexSrc, fragmentSrc]) => {
-    program = initShaderProgram(gl, vertexSrc, fragmentSrc);
-    if (!program) return;
-
-    gl.useProgram(program);
-
-    // === Setup vertex buffer for fullscreen quad ===
-    positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      -1, -1,
-       1, -1,
-      -1,  1,
-      -1,  1,
-       1, -1,
-       1,  1
-    ]), gl.STATIC_DRAW);
-
-    positionAttribLocation = gl.getAttribLocation(program, 'a_position');
-    gl.enableVertexAttribArray(positionAttribLocation);
-    gl.vertexAttribPointer(positionAttribLocation, 2, gl.FLOAT, false, 0, 0);
-
-    // === Uniform locations ===
-    timeUniform = gl.getUniformLocation(program, 'u_time');
-    idleUniform = gl.getUniformLocation(program, 'u_idle');
-    mouseUniform = gl.getUniformLocation(program, 'u_mouse');
-
-    // Start render loop
-    requestAnimationFrame(render);
-  });
-
-  // Render loop
-  function render() {
-    const now = (Date.now() - startTime) / 1000;
-
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-
-    gl.useProgram(program);
-
-    // Set uniforms
-    gl.uniform1f(timeUniform, now);
-    gl.uniform1i(idleUniform, idle ? 1 : 0);
-    gl.uniform2fv(mouseUniform, mousePos);
-
-    // Draw fullscreen quad
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.enableVertexAttribArray(positionAttribLocation);
-    gl.vertexAttribPointer(positionAttribLocation, 2, gl.FLOAT, false, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-    requestAnimationFrame(render);
+function compile(type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.error(gl.getShaderInfoLog(shader));
+    throw new Error('Shader compile failed');
   }
+  return shader;
+}
 
-  // Utility: Fetch shader files
-  async function fetchShaderFiles() {
-    try {
-      const vert = await fetch('shader/liquidShader.vert').then(res => res.text());
-      const frag = await fetch('shader/liquidShader.frag').then(res => res.text());
-      return [vert, frag];
-    } catch (e) {
-      console.error("Error loading shaders:", e);
-      return ['', ''];
-    }
-  }
+function render() {
+  const now = (Date.now() - startTime) / 1000;
 
-  // Utility: Compile and link shader program
-  function initShaderProgram(gl, vsSource, fsSource) {
-    const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-    const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb1);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.useProgram(program);
 
-    if (!vertexShader || !fragmentShader) return null;
+  const posBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1, -1, 1, -1, -1, 1,
+    -1, 1, 1, -1, 1, 1
+  ]), gl.STATIC_DRAW);
 
-    const shaderProgram = gl.createProgram();
-    gl.attachShader(shaderProgram, vertexShader);
-    gl.attachShader(shaderProgram, fragmentShader);
-    gl.linkProgram(shaderProgram);
+  const posLoc = gl.getAttribLocation(program, 'a_position');
+  gl.enableVertexAttribArray(posLoc);
+  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
 
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      console.error('Shader program failed to link:', gl.getProgramInfoLog(shaderProgram));
-      return null;
-    }
-    return shaderProgram;
-  }
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, buffer2);
+  gl.uniform1i(gl.getUniformLocation(program, 'u_feedback'), 0);
+  gl.uniform1f(gl.getUniformLocation(program, 'u_time'), now);
+  gl.uniform2fv(gl.getUniformLocation(program, 'u_mouse'), mouse);
+  gl.uniform1f(gl.getUniformLocation(program, 'u_velocity'), velocity);
+  gl.uniform1i(gl.getUniformLocation(program, 'u_idle'), idle ? 1 : 0);
+  gl.uniform2f(gl.getUniformLocation(program, 'u_resolution'), canvas.width, canvas.height);
 
-  // Utility: Compile individual shader
-  function loadShader(gl, type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
 
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      console.error('Shader compile error:', gl.getShaderInfoLog(shader));
-      gl.deleteShader(shader);
-      return null;
-    }
-    return shader;
-  }
+  // Swap buffers
+  [buffer1, buffer2] = [buffer2, buffer1];
+  [fb1, fb2] = [fb2, fb1];
+
+  // Render to screen
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.bindTexture(gl.TEXTURE_2D, buffer2);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+  velocity *= 0.95;
+  requestAnimationFrame(render);
 }
