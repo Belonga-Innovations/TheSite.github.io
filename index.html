@@ -5,11 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Belonga Innovations</title>
   <style>
+    :root {
+      --neon-green: #00ff66;
+      --dark-bg: #000000;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
-      background-color: black;
-      color: #e0e0e0;
+      background-color: var(--dark-bg);
+      color: var(--text-primary);
       font-family: Arial, sans-serif;
       overflow: hidden;
     }
@@ -38,18 +45,20 @@
       color: white;
       position: relative;
       display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
     h1::after {
       content: '';
       position: absolute;
-      bottom: -0.2rem;
+      bottom: -0.3rem;
       left: 0;
       width: 100%;
-      height: 0.2rem;
-      background: radial-gradient(closest-side, #00ff00 50%, transparent 100%);
-      opacity: 0.6;
-      filter: blur(4px);
+      height: 0.25rem;
+      background: radial-gradient(closest-side, var(--neon-green) 50%, transparent 100%);
+      opacity: 0.8;
+      filter: blur(6px);
       transition: opacity 0.3s;
     }
 
@@ -65,16 +74,52 @@
 
     h2 {
       font-size: clamp(3rem, 5vw, 5rem);
-      color: #e0e0e0;
+      color: var(--text-primary);
       margin: 0.5rem 0;
+      line-height: 1.1;
+      font-weight: bold;
     }
 
     p {
       font-size: clamp(1rem, 2vw, 2rem);
-      color: #b0b0b0;
+      color: var(--text-secondary);
       max-width: 800px;
       margin: 0 auto;
     }
+
+    section.about {
+      margin-top: 4rem;
+      background-color: rgba(0,0,0,0.7);
+      border: 1px solid var(--neon-green);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      backdrop-filter: blur(4px);
+      pointer-events: auto;
+    }
+
+    section.about h3 {
+      color: var(--neon-green);
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin-bottom: 1rem;
+    }
+
+    section.about img {
+      max-width: 200px;
+      width: 40vw;
+      border-radius: 50%;
+      border: 2px solid var(--neon-green);
+      margin-bottom: 1rem;
+    }
+
+    section.about p {
+      font-size: clamp(1rem, 2vw, 1.5rem);
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
   </style>
 </head>
 <body>
@@ -85,156 +130,16 @@
   </header>
 
   <main>
-    <h2>No Compromise. Just design done right.</h2>
+    <h2>No Compromise. Just Design Done Right.</h2>
     <p>We don't build for today. We build what's next.</p>
   </main>
 
-  <script id="vertex-shader" type="x-shader/x-vertex">
-    attribute vec2 a_position;
-    varying vec2 v_uv;
+  <section class="about">
+    <h3>About</h3>
+    <img src="assets/Ryan_propic_600dpi.png" alt="Ryan Belonga" />
+    <p>Ryan Belonga — Founder, AI Systems Engineer & Lead Product Architect. Dedicated to precision engineering and design done right.</p>
+  </section>
 
-    void main() {
-      v_uv = a_position * 0.5 + 0.5;
-      gl_Position = vec4(a_position, 0.0, 1.0);
-    }
-  </script>
-
-  <script id="fragment-shader" type="x-shader/x-fragment">
-    precision mediump float;
-
-    uniform float u_time;
-    uniform int u_idle;
-    uniform vec2 u_mouse;
-    varying vec2 v_uv;
-
-    float distanceField(vec2 uv, vec2 point) {
-      return length(uv - point);
-    }
-
-    void main() {
-      vec2 uv = v_uv;
-
-      // Base subtle noise background
-      float noise = fract(sin(dot(uv, vec2(12.9898,78.233))) * 43758.5453) * 0.05;
-
-      // Calculate distance from cursor
-      float dist = distanceField(uv, u_mouse);
-
-      // Create tight, sharp falloff around cursor with ~3 inch fade
-      float radius = 0.02;
-      float softness = 0.03;
-      float glow = exp(-pow(dist / radius, 3.0)) * 1.5;
-
-      // Add subtle green highlight
-      vec3 color = vec3(noise);
-      color += vec3(0.0, 1.0, 0.0) * glow * 0.5;
-      color += vec3(0.8) * glow * 0.1;
-
-      // Idle fade
-      if(u_idle == 1) {
-        color *= 0.2;
-      }
-
-      gl_FragColor = vec4(color, 1.0);
-    }
-  </script>
-
-  <script>
-    const canvas = document.getElementById('background-canvas');
-    const gl = canvas.getContext('webgl');
-
-    let idle = false;
-    let idleTimer;
-    let mousePos = [0.5, 0.5];
-
-    function resetIdleTimer() {
-      idle = false;
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => { idle = true; }, 3000);
-    }
-
-    window.addEventListener('mousemove', (e) => {
-      mousePos = [e.clientX / window.innerWidth, 1.0 - e.clientY / window.innerHeight];
-      resetIdleTimer();
-    });
-    window.addEventListener('keydown', resetIdleTimer);
-    resetIdleTimer();
-
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    function createShader(gl, type, source) {
-      const shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.error(gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
-      }
-      return shader;
-    }
-
-    function createProgram(vsSource, fsSource) {
-      const vShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
-      const fShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
-      const program = gl.createProgram();
-      gl.attachShader(program, vShader);
-      gl.attachShader(program, fShader);
-      gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        console.error(gl.getProgramInfoLog(program));
-        return null;
-      }
-      return program;
-    }
-
-    const vsSource = document.getElementById('vertex-shader').text;
-    const fsSource = document.getElementById('fragment-shader').text;
-    const program = createProgram(vsSource, fsSource);
-    gl.useProgram(program);
-
-    const posBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-      -1, -1, 1, -1, -1, 1,
-      -1, 1, 1, -1, 1, 1
-    ]), gl.STATIC_DRAW);
-
-    const aPos = gl.getAttribLocation(program, 'a_position');
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-
-    const uTime = gl.getUniformLocation(program, 'u_time');
-    const uIdle = gl.getUniformLocation(program, 'u_idle');
-    const uMouse = gl.getUniformLocation(program, 'u_mouse');
-
-    let startTime = Date.now();
-
-    function render() {
-      const now = (Date.now() - startTime) / 1000;
-
-      gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.useProgram(program);
-
-      gl.uniform1f(uTime, now);
-      gl.uniform1i(uIdle, idle ? 1 : 0);
-      gl.uniform2f(uMouse, mousePos[0], mousePos[1]);
-
-      gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-      gl.enableVertexAttribArray(aPos);
-      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
