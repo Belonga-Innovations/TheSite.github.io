@@ -39,11 +39,10 @@
     header h1 {
       margin: 0;
       font-size: 2rem;
-      color: #39FF14;
+      color: #ffffff;
       text-shadow:
-        0 0 6px rgba(57, 255, 20, 0.6),
-        0 0 12px rgba(57, 255, 20, 0.3),
-        0 0 24px rgba(57, 255, 20, 0.15);
+        0 2px 6px rgba(57, 255, 20, 0.5),
+        0 0 2px rgba(57, 255, 20, 0.3);
       letter-spacing: 1px;
       font-weight: 700;
     }
@@ -76,6 +75,7 @@
       font-size: 1.25rem;
       line-height: 1.5;
       color: #cceeee;
+      text-align: center;
       text-shadow: 0 0 4px rgba(0, 255, 255, 0.2);
     }
 
@@ -84,22 +84,40 @@
       flex-wrap: wrap;
       gap: 1rem;
       margin-top: 1rem;
+      justify-content: center;
     }
 
     #about .member {
-      flex: 1 1 45%;
+      flex: 1 1 250px;
       background: rgba(0,0,0,0.4);
       padding: 1rem;
       border-radius: 8px;
       text-align: center;
+      max-width: 300px;
+    }
+
+    #about .member img {
+      width: 150px;
+      max-width: 80%;
+      border-radius: 8px;
+      border: 2px solid #39FF14;
+      box-shadow:
+        0 0 8px rgba(57, 255, 20, 0.4),
+        0 0 16px rgba(57, 255, 20, 0.2);
+      margin-bottom: 1rem;
+      transition: transform 0.3s ease;
+    }
+
+    #about .member img:hover {
+      transform: scale(1.03);
     }
 
     #about .member h3 {
       margin: 0.5rem 0;
-      color: #39FF14;
+      color: #ffffff;
       text-shadow:
-        0 0 4px rgba(57, 255, 20, 0.5),
-        0 0 8px rgba(57, 255, 20, 0.2);
+        0 2px 6px rgba(57, 255, 20, 0.5),
+        0 0 2px rgba(57, 255, 20, 0.3);
     }
 
     #contact form {
@@ -180,6 +198,7 @@
       </p>
       <div class="team">
         <div class="member">
+          <img src="assets/Ryan_propic_600dpi.png" alt="Ryan Belonga">
           <h3>Ryan Belonga</h3>
           <p>Founder, AI Systems Engineer, Lead Product Architect</p>
         </div>
